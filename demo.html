@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Koyomi - 労働時間トラッカー</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e6e8ec;
+    --muted: #8b93a3;
+    --accent: #4f8cff;
+    --accent-dim: #2f4d8a;
+    --green: #3ecf8e;
+    --red: #ef5a5a;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 24px 32px 12px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  header .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .add-project {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .add-project input {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    outline: none;
+  }
+  .add-project input:focus {
+    border-color: var(--accent);
+  }
+  .add-project button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .add-project button:hover { background: #6a9fff; }
+
+  .summary-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .summary-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    flex: 1;
+  }
+  .summary-card .label {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .summary-card .value {
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .project-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.15s;
+  }
+  .project-card.running {
+    border-color: var(--green);
+    background: linear-gradient(180deg, rgba(62,207,142,0.06), transparent 40%), var(--panel);
+  }
+  .project-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .project-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .project-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .project-name input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--accent);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    outline: none;
+    width: 100%;
+    padding: 0;
+  }
+  .project-meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .project-timer {
+    font-size: 22px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    min-width: 110px;
+    text-align: right;
+    color: var(--text);
+  }
+  .project-card.running .project-timer {
+    color: var(--green);
+  }
+  .project-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .btn {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn.start { color: var(--green); }
+  .btn.stop { color: var(--red); }
+  .btn.delete:hover { border-color: var(--red); color: var(--red); }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    font-size: 14px;
+  }
+
+  .history {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+  }
+  .history-toggle {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .history-toggle:hover { color: var(--accent); }
+  .history-list {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: var(--panel-2);
+    border-radius: 6px;
+  }
+  .history-row .dur {
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Koyomi</h1>
+    <div class="subtitle">プロジェクト労働時間トラッカー（デモ）</div>
+  </header>
+
+  <div class="container">
+    <div class="add-project">
+      <input type="text" id="newProjectInput" placeholder="新しいプロジェクト名を入力…" maxlength="60">
+      <button id="addProjectBtn">追加</button>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-card">
+        <div class="label">全プロジェクト合計</div>
+        <div class="value" id="totalAll">00:00:00</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">本日の合計</div>
+        <div class="value" id="totalToday">00:00:00</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">稼働中プロジェクト</div>
+        <div class="value" id="runningCount">0</div>
+      </div>
+    </div>
+
+    <div class="project-list" id="projectList"></div>
+    <div class="empty" id="emptyState" style="display:none;">プロジェクトがまだありません。上のフォームから追加してください。</div>
+  </div>
+
+<script>
+const STORAGE_KEY = "koyomi.projects.v1";
+const COLORS = ["#4f8cff","#3ecf8e","#f5a623","#ef5a5a","#b06cff","#25c2c2","#ff7ab6","#c9d34c"];
+
+/** @typedef {{id:string, name:string, color:string, createdAt:number, running:boolean, currentStart:number|null, sessions:{start:number, end:number}[]}} Project */
+
+/** @type {Project[]} */
+let projects = loadProjects();
+let expandedHistory = new Set();
+
+function loadProjects() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.error("Failed to load projects", e);
+    return [];
+  }
+}
+
+function saveProjects() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function pickColor() {
+  return COLORS[projects.length % COLORS.length];
+}
+
+function addProject(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  projects.push({
+    id: uid(),
+    name: trimmed,
+    color: pickColor(),
+    createdAt: Date.now(),
+    running: false,
+    currentStart: null,
+    sessions: []
+  });
+  saveProjects();
+  render();
+}
+
+function deleteProject(id) {
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  if (!confirm(`「${p.name}」を削除しますか？記録された時間もすべて削除されます。`)) return;
+  projects = projects.filter(p => p.id !== id);
+  saveProjects();
+  render();
+}
+
+function renameProject(id, newName) {
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  const trimmed = newName.trim();
+  if (trimmed) p.name = trimmed;
+  saveProjects();
+  render();
+}
+
+function toggleTimer(id) {
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  if (p.running) {
+    p.sessions.push({ start: p.currentStart, end: Date.now() });
+    p.running = false;
+    p.currentStart = null;
+  } else {
+    // stop any other running project (single active timer)
+    projects.forEach(other => {
+      if (other.running && other.id !== id) {
+        other.sessions.push({ start: other.currentStart, end: Date.now() });
+        other.running = false;
+        other.currentStart = null;
+      }
+    });
+    p.running = true;
+    p.currentStart = Date.now();
+  }
+  saveProjects();
+  render();
+}
+
+function projectTotalMs(p, upToNow) {
+  let total = p.sessions.reduce((sum, s) => sum + (s.end - s.start), 0);
+  if (p.running && upToNow) {
+    total += Date.now() - p.currentStart;
+  }
+  return total;
+}
+
+function projectTodayMs(p, upToNow) {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const dayStart = startOfDay.getTime();
+  let total = 0;
+  for (const s of p.sessions) {
+    if (s.end > dayStart) {
+      total += s.end - Math.max(s.start, dayStart);
+    }
+  }
+  if (p.running && upToNow && p.currentStart > dayStart) {
+    total += Date.now() - p.currentStart;
+  } else if (p.running && upToNow) {
+    total += Date.now() - dayStart;
+  }
+  return total;
+}
+
+function formatDuration(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return [h, m, s].map(v => String(v).padStart(2, "0")).join(":");
+}
+
+function formatDateTime(ts) {
+  const d = new Date(ts);
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+
+function render() {
+  const list = document.getElementById("projectList");
+  const empty = document.getElementById("emptyState");
+  list.innerHTML = "";
+
+  if (projects.length === 0) {
+    empty.style.display = "block";
+  } else {
+    empty.style.display = "none";
+  }
+
+  let allMs = 0;
+  let todayMs = 0;
+  let runningCount = 0;
+
+  for (const p of projects) {
+    allMs += projectTotalMs(p, true);
+    todayMs += projectTodayMs(p, true);
+    if (p.running) runningCount++;
+
+    const card = document.createElement("div");
+    card.className = "project-card" + (p.running ? " running" : "");
+
+    const colorDot = document.createElement("div");
+    colorDot.className = "project-color";
+    colorDot.style.background = p.color;
+
+    const info = document.createElement("div");
+    info.className = "project-info";
+    const nameEl = document.createElement("div");
+    nameEl.className = "project-name";
+    nameEl.textContent = p.name;
+    nameEl.title = "クリックで編集";
+    nameEl.style.cursor = "text";
+    nameEl.addEventListener("click", () => startRename(p.id, nameEl));
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "project-meta";
+    const sessionCount = p.sessions.length + (p.running ? 1 : 0);
+    metaEl.textContent = `本日 ${formatDuration(projectTodayMs(p, true))} ・ セッション ${sessionCount}件`;
+
+    info.appendChild(nameEl);
+    info.appendChild(metaEl);
+
+    const historyWrap = document.createElement("div");
+    historyWrap.className = "history";
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "history-toggle";
+    const isExpanded = expandedHistory.has(p.id);
+    toggleBtn.textContent = isExpanded ? "履歴を隠す ▲" : `履歴を見る (${p.sessions.length}) ▼`;
+    toggleBtn.addEventListener("click", () => {
+      if (expandedHistory.has(p.id)) expandedHistory.delete(p.id);
+      else expandedHistory.add(p.id);
+      render();
+    });
+    historyWrap.appendChild(toggleBtn);
+
+    if (isExpanded) {
+      const histList = document.createElement("div");
+      histList.className = "history-list";
+      if (p.sessions.length === 0) {
+        const none = document.createElement("div");
+        none.textContent = "まだ記録がありません";
+        histList.appendChild(none);
+      } else {
+        [...p.sessions].reverse().slice(0, 20).forEach(s => {
+          const row = document.createElement("div");
+          row.className = "history-row";
+          const label = document.createElement("span");
+          label.textContent = `${formatDateTime(s.start)} 〜 ${formatDateTime(s.end)}`;
+          const dur = document.createElement("span");
+          dur.className = "dur";
+          dur.textContent = formatDuration(s.end - s.start);
+          row.appendChild(label);
+          row.appendChild(dur);
+          histList.appendChild(row);
+        });
+      }
+      historyWrap.appendChild(histList);
+    }
+
+    const timerEl = document.createElement("div");
+    timerEl.className = "project-timer";
+    timerEl.dataset.projectId = p.id;
+    timerEl.textContent = formatDuration(projectTotalMs(p, true));
+
+    const actions = document.createElement("div");
+    actions.className = "project-actions";
+
+    const toggleTimerBtn = document.createElement("button");
+    toggleTimerBtn.className = "btn " + (p.running ? "stop" : "start");
+    toggleTimerBtn.textContent = p.running ? "⏸" : "▶";
+    toggleTimerBtn.title = p.running ? "停止" : "開始";
+    toggleTimerBtn.addEventListener("click", () => toggleTimer(p.id));
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "btn delete";
+    deleteBtn.textContent = "✕";
+    deleteBtn.title = "削除";
+    deleteBtn.addEventListener("click", () => deleteProject(p.id));
+
+    actions.appendChild(toggleTimerBtn);
+    actions.appendChild(deleteBtn);
+
+    const mainRow = document.createElement("div");
+    mainRow.style.display = "contents";
+
+    card.appendChild(colorDot);
+    card.appendChild(info);
+    card.appendChild(timerEl);
+    card.appendChild(actions);
+
+    const cardWrap = document.createElement("div");
+    cardWrap.appendChild(card);
+    cardWrap.appendChild(historyWrap);
+    cardWrap.style.background = "var(--panel)";
+    cardWrap.style.border = "1px solid var(--border)";
+    cardWrap.style.borderRadius = "10px";
+    cardWrap.style.padding = "0 18px 10px";
+    card.style.border = "none";
+    card.style.background = "transparent";
+    card.style.padding = "16px 0";
+    if (p.running) {
+      cardWrap.style.borderColor = "var(--green)";
+    }
+
+    list.appendChild(cardWrap);
+  }
+
+  document.getElementById("totalAll").textContent = formatDuration(allMs);
+  document.getElementById("totalToday").textContent = formatDuration(todayMs);
+  document.getElementById("runningCount").textContent = String(runningCount);
+}
+
+function startRename(id, nameEl) {
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = p.name;
+  input.maxLength = 60;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+  const commit = () => renameProject(id, input.value);
+  input.addEventListener("blur", commit);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") input.blur();
+    if (e.key === "Escape") { input.value = p.name; input.blur(); }
+  });
+}
+
+// live tick for running timers without full re-render (avoid clobbering inputs)
+setInterval(() => {
+  document.querySelectorAll(".project-timer").forEach(el => {
+    const id = el.dataset.projectId;
+    const p = projects.find(p => p.id === id);
+    if (p) el.textContent = formatDuration(projectTotalMs(p, true));
+  });
+  const anyRunning = projects.some(p => p.running);
+  if (anyRunning) {
+    let allMs = 0, todayMs = 0;
+    for (const p of projects) {
+      allMs += projectTotalMs(p, true);
+      todayMs += projectTodayMs(p, true);
+    }
+    document.getElementById("totalAll").textContent = formatDuration(allMs);
+    document.getElementById("totalToday").textContent = formatDuration(todayMs);
+  }
+}, 1000);
+
+document.getElementById("addProjectBtn").addEventListener("click", () => {
+  const input = document.getElementById("newProjectInput");
+  addProject(input.value);
+  input.value = "";
+  input.focus();
+});
+document.getElementById("newProjectInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("addProjectBtn").click();
+});
+
+// persist state before unload in case a timer is running
+window.addEventListener("beforeunload", () => {
+  saveProjects();
+});
+
+render();
+</script>
+</body>
+</html>
