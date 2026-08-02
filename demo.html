@@ -9,6 +9,7 @@
     --bg: #0f1115;
     --panel: #171a21;
     --panel-2: #1e222b;
+    --panel-3: #262b36;
     --border: #2a2f3a;
     --text: #e6e8ec;
     --muted: #8b93a3;
@@ -16,6 +17,7 @@
     --accent-dim: #2f4d8a;
     --green: #3ecf8e;
     --red: #ef5a5a;
+    --amber: #f5a623;
     --radius: 10px;
   }
   * { box-sizing: border-box; }
@@ -33,199 +35,163 @@
     justify-content: space-between;
     border-bottom: 1px solid var(--border);
   }
-  header h1 {
-    font-size: 20px;
-    margin: 0;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-  header .subtitle {
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .container {
-    max-width: 920px;
-    margin: 0 auto;
-    padding: 24px 20px 60px;
-  }
-  .add-project {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-  }
+  header h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.02em; }
+  header .subtitle { color: var(--muted); font-size: 13px; }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .add-project { display: flex; gap: 8px; margin-bottom: 16px; }
   .add-project input {
-    flex: 1;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px 14px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    outline: none;
+    flex: 1; background: var(--panel); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 14px; border-radius: var(--radius);
+    font-size: 14px; outline: none;
   }
-  .add-project input:focus {
-    border-color: var(--accent);
-  }
+  .add-project input:focus { border-color: var(--accent); }
   .add-project button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 10px 18px;
-    border-radius: var(--radius);
-    font-size: 14px;
-    cursor: pointer;
-    font-weight: 600;
+    background: var(--accent); color: white; border: none; padding: 10px 18px;
+    border-radius: var(--radius); font-size: 14px; cursor: pointer; font-weight: 600;
   }
   .add-project button:hover { background: #6a9fff; }
 
-  .summary-bar {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 24px;
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
   }
-  .summary-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px 18px;
-    flex: 1;
+  .toolbar-left { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+  .toolbar-right { display: flex; gap: 8px; }
+  .toolbar button.ghost {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 7px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
   }
-  .summary-card .label {
-    color: var(--muted);
-    font-size: 12px;
-    margin-bottom: 6px;
-  }
-  .summary-card .value {
-    font-size: 22px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
+  .toolbar button.ghost:hover { border-color: var(--accent); }
 
-  .project-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .summary-bar { display: flex; gap: 16px; margin-bottom: 24px; }
+  .summary-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; flex: 1; }
+  .summary-card .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+  .summary-card .value { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  .section-label { color: var(--muted); font-size: 12px; margin: 20px 0 8px; letter-spacing: 0.04em; }
+
+  .project-list { display: flex; flex-direction: column; gap: 10px; }
+  .project-wrap {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 0 18px 10px;
   }
-  .project-card {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    transition: border-color 0.15s;
-  }
-  .project-card.running {
-    border-color: var(--green);
-    background: linear-gradient(180deg, rgba(62,207,142,0.06), transparent 40%), var(--panel);
-  }
-  .project-color {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .project-info {
-    flex: 1;
-    min-width: 0;
-  }
+  .project-wrap.running { border-color: var(--green); }
+  .project-wrap.archived { opacity: 0.6; }
+
+  .project-card { display: flex; align-items: center; gap: 16px; padding: 16px 0; position: relative; }
+  .project-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .project-info { flex: 1; min-width: 0; }
   .project-name {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 15px; font-weight: 600; margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: text;
   }
   .project-name input {
-    background: transparent;
-    border: none;
-    border-bottom: 1px dashed var(--accent);
-    color: var(--text);
-    font-size: 15px;
-    font-weight: 600;
-    outline: none;
-    width: 100%;
-    padding: 0;
+    background: transparent; border: none; border-bottom: 1px dashed var(--accent);
+    color: var(--text); font-size: 15px; font-weight: 600; outline: none; width: 100%; padding: 0;
   }
-  .project-meta {
-    color: var(--muted);
-    font-size: 12px;
-  }
+  .project-meta { color: var(--muted); font-size: 12px; }
   .project-timer {
-    font-size: 22px;
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-    min-width: 110px;
-    text-align: right;
-    color: var(--text);
+    font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 600;
+    min-width: 110px; text-align: right; color: var(--text);
   }
-  .project-card.running .project-timer {
-    color: var(--green);
-  }
-  .project-actions {
-    display: flex;
-    gap: 6px;
-  }
+  .project-wrap.running .project-timer { color: var(--green); }
+  .project-actions { display: flex; gap: 6px; align-items: center; }
   .btn {
-    border: 1px solid var(--border);
-    background: var(--panel-2);
-    color: var(--text);
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
   }
   .btn:hover { border-color: var(--accent); }
   .btn.start { color: var(--green); }
   .btn.stop { color: var(--red); }
-  .btn.delete:hover { border-color: var(--red); color: var(--red); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  .empty {
-    text-align: center;
-    color: var(--muted);
-    padding: 60px 20px;
-    font-size: 14px;
+  .menu-wrap { position: relative; }
+  .menu-dropdown {
+    position: absolute; top: 42px; right: 0; background: var(--panel-3);
+    border: 1px solid var(--border); border-radius: 8px; min-width: 140px;
+    z-index: 20; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   }
+  .menu-dropdown button {
+    display: block; width: 100%; text-align: left; background: none; border: none;
+    color: var(--text); padding: 9px 12px; font-size: 13px; cursor: pointer;
+  }
+  .menu-dropdown button:hover { background: var(--panel-2); }
+  .menu-dropdown button.danger { color: var(--red); }
 
-  .history {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px dashed var(--border);
-  }
-  .history-toggle {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 12px;
-    cursor: pointer;
-    padding: 4px 0;
-  }
+  .history { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+  .history-toggle { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 4px 0; }
   .history-toggle:hover { color: var(--accent); }
-  .history-list {
-    margin-top: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 12px;
-    color: var(--muted);
-  }
+  .history-groups { margin-top: 6px; display: flex; flex-direction: column; gap: 10px; }
+  .history-group-title { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .history-list { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
   .history-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 4px 8px;
-    background: var(--panel-2);
-    border-radius: 6px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 8px; background: var(--panel-2); border-radius: 6px; cursor: pointer; gap: 8px;
   }
-  .history-row .dur {
-    font-variant-numeric: tabular-nums;
-    color: var(--text);
+  .history-row:hover { background: var(--panel-3); }
+  .history-row .left { display: flex; flex-direction: column; min-width: 0; }
+  .history-row .note { color: var(--muted); font-size: 11px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-row .dur { font-variant-numeric: tabular-nums; color: var(--text); flex-shrink: 0; }
+  .history-row .del {
+    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; flex-shrink: 0;
   }
+  .history-row .del:hover { color: var(--red); }
+  .show-more-btn {
+    background: none; border: 1px dashed var(--border); color: var(--muted);
+    font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; align-self: flex-start;
+  }
+  .show-more-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .session-edit {
+    background: var(--panel-3); border-radius: 6px; padding: 8px; display: flex;
+    flex-direction: column; gap: 6px; font-size: 12px;
+  }
+  .session-edit label { color: var(--muted); font-size: 11px; }
+  .session-edit input[type="datetime-local"],
+  .session-edit input[type="text"] {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    padding: 5px 8px; border-radius: 6px; font-size: 12px; outline: none; width: 100%;
+  }
+  .session-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
+  .session-edit-actions button {
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;
+  }
+  .session-edit-actions button.primary { background: var(--accent); border-color: var(--accent); }
+
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 14px; }
+
+  .toast-container {
+    position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column;
+    gap: 8px; z-index: 100;
+  }
+  .toast {
+    background: var(--panel-3); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 16px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    max-width: 320px;
+  }
+  .toast.warn { border-color: var(--amber); }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex;
+    align-items: center; justify-content: center; z-index: 200;
+  }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; max-width: 420px; width: 90%;
+  }
+  .modal h2 { font-size: 16px; margin: 0 0 8px; }
+  .modal p { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 16px; }
+  .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+  .modal-actions button {
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+    padding: 10px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left;
+  }
+  .modal-actions button:hover { border-color: var(--accent); }
+  .modal-actions button.recommended { border-color: var(--accent); background: var(--accent-dim); }
 </style>
 </head>
 <body>
@@ -238,6 +204,17 @@
     <div class="add-project">
       <input type="text" id="newProjectInput" placeholder="新しいプロジェクト名を入力…" maxlength="60">
       <button id="addProjectBtn">追加</button>
+    </div>
+
+    <div class="toolbar">
+      <label class="toolbar-left">
+        <input type="checkbox" id="showArchivedToggle">
+        アーカイブ済みを表示
+      </label>
+      <div class="toolbar-right">
+        <button class="ghost" id="exportJsonBtn">JSONエクスポート</button>
+        <button class="ghost" id="exportCsvBtn">CSVエクスポート</button>
+      </div>
     </div>
 
     <div class="summary-bar">
@@ -259,125 +236,102 @@
     <div class="empty" id="emptyState" style="display:none;">プロジェクトがまだありません。上のフォームから追加してください。</div>
   </div>
 
+  <div class="toast-container" id="toastContainer"></div>
+
 <script>
-const STORAGE_KEY = "koyomi.projects.v1";
+// ---- 定数 -----------------------------------------------------------
+const STORAGE_KEY = "koyomi.state.v1";
+const OLD_STORAGE_KEY = "koyomi.projects.v1"; // v0（旧デモ）からの移行用
 const COLORS = ["#4f8cff","#3ecf8e","#f5a623","#ef5a5a","#b06cff","#25c2c2","#ff7ab6","#c9d34c"];
 
-/** @typedef {{id:string, name:string, color:string, createdAt:number, running:boolean, currentStart:number|null, sessions:{start:number, end:number}[]}} Project */
+const MIN_SESSION_MS = 10 * 1000;              // FR-5.2-8
+const MAX_SESSION_MS = 12 * 60 * 60 * 1000;    // FR-5.2-7
+const HEARTBEAT_INTERVAL_MS = 30 * 1000;       // FR-5.2-5
+const RECOVERY_THRESHOLD_MS = 5 * 60 * 1000;   // FR-5.2-6
+const HISTORY_RECENT_DAYS = 7;                 // FR-5.3-3
+const SAVE_DEBOUNCE_MS = 500;                  // FR-5.5-3
 
-/** @type {Project[]} */
-let projects = loadProjects();
+// ---- 状態（AppState, SPEC.md §7） ------------------------------------
+/** @type {{schemaVersion:1, projects:object[], sessions:object[], activeTimer:object|null}} */
+let state = loadState();
 let expandedHistory = new Set();
+let expandedOlder = new Set();
+let editingSessionId = null;
+let openMenuProjectId = null;
+let showArchived = false;
+let saveTimer = null;
 
-function loadProjects() {
+// ---- 永続化（ADR-1, ADR-6, §8） ---------------------------------------
+function migrateFromV0(oldProjects) {
+  const projects = [];
+  const sessions = [];
+  let activeTimer = null;
+  for (const p of oldProjects) {
+    projects.push({ id: p.id, name: p.name, color: p.color, createdAt: p.createdAt, archived: false });
+    for (const s of (p.sessions || [])) {
+      sessions.push({ id: uid(), projectId: p.id, start: s.start, end: s.end });
+    }
+    if (p.running && p.currentStart) {
+      activeTimer = { projectId: p.id, startedAt: p.currentStart, lastHeartbeat: Date.now() };
+    }
+  }
+  return { schemaVersion: 1, projects, sessions, activeTimer };
+}
+
+function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const data = JSON.parse(raw);
-    return Array.isArray(data) ? data : [];
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data && data.schemaVersion === 1) return data;
+    }
+    const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
+    if (oldRaw) {
+      const oldProjects = JSON.parse(oldRaw);
+      if (Array.isArray(oldProjects)) {
+        const migrated = migrateFromV0(oldProjects);
+        localStorage.removeItem(OLD_STORAGE_KEY);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        return migrated;
+      }
+    }
   } catch (e) {
-    console.error("Failed to load projects", e);
-    return [];
+    console.error("state load failed, falling back to empty state", e);
+  }
+  return { schemaVersion: 1, projects: [], sessions: [], activeTimer: null };
+}
+
+function persistNow() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error("save failed", e);
+    showToast("保存に失敗しました", "warn");
   }
 }
 
-function saveProjects() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(persistNow, SAVE_DEBOUNCE_MS);
 }
 
+window.addEventListener("beforeunload", persistNow);
+
+// ---- ユーティリティ ---------------------------------------------------
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
+function getProject(id) {
+  return state.projects.find(p => p.id === id);
+}
+
 function pickColor() {
-  return COLORS[projects.length % COLORS.length];
-}
-
-function addProject(name) {
-  const trimmed = name.trim();
-  if (!trimmed) return;
-  projects.push({
-    id: uid(),
-    name: trimmed,
-    color: pickColor(),
-    createdAt: Date.now(),
-    running: false,
-    currentStart: null,
-    sessions: []
-  });
-  saveProjects();
-  render();
-}
-
-function deleteProject(id) {
-  const p = projects.find(p => p.id === id);
-  if (!p) return;
-  if (!confirm(`「${p.name}」を削除しますか？記録された時間もすべて削除されます。`)) return;
-  projects = projects.filter(p => p.id !== id);
-  saveProjects();
-  render();
-}
-
-function renameProject(id, newName) {
-  const p = projects.find(p => p.id === id);
-  if (!p) return;
-  const trimmed = newName.trim();
-  if (trimmed) p.name = trimmed;
-  saveProjects();
-  render();
-}
-
-function toggleTimer(id) {
-  const p = projects.find(p => p.id === id);
-  if (!p) return;
-  if (p.running) {
-    p.sessions.push({ start: p.currentStart, end: Date.now() });
-    p.running = false;
-    p.currentStart = null;
-  } else {
-    // stop any other running project (single active timer)
-    projects.forEach(other => {
-      if (other.running && other.id !== id) {
-        other.sessions.push({ start: other.currentStart, end: Date.now() });
-        other.running = false;
-        other.currentStart = null;
-      }
-    });
-    p.running = true;
-    p.currentStart = Date.now();
-  }
-  saveProjects();
-  render();
-}
-
-function projectTotalMs(p, upToNow) {
-  let total = p.sessions.reduce((sum, s) => sum + (s.end - s.start), 0);
-  if (p.running && upToNow) {
-    total += Date.now() - p.currentStart;
-  }
-  return total;
-}
-
-function projectTodayMs(p, upToNow) {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const dayStart = startOfDay.getTime();
-  let total = 0;
-  for (const s of p.sessions) {
-    if (s.end > dayStart) {
-      total += s.end - Math.max(s.start, dayStart);
-    }
-  }
-  if (p.running && upToNow && p.currentStart > dayStart) {
-    total += Date.now() - p.currentStart;
-  } else if (p.running && upToNow) {
-    total += Date.now() - dayStart;
-  }
-  return total;
+  return COLORS[state.projects.length % COLORS.length];
 }
 
 function formatDuration(ms) {
-  const totalSec = Math.floor(ms / 1000);
+  const totalSec = Math.floor(Math.max(0, ms) / 1000);
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
@@ -389,142 +343,569 @@ function formatDateTime(ts) {
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
 }
 
+function toDatetimeLocalValue(ts) {
+  const d = new Date(ts - new Date().getTimezoneOffset() * 60000);
+  return d.toISOString().slice(0, 16);
+}
+
+function fromDatetimeLocalValue(value) {
+  return new Date(value).getTime();
+}
+
+function localDateKey(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function startOfLocalDay(ts) {
+  const d = new Date(ts);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+// ---- 純粋関数: 時間計算（SPEC.md §10.1） ------------------------------
+function overlapMs(aStart, aEnd, bStart, bEnd) {
+  const start = Math.max(aStart, bStart);
+  const end = Math.min(aEnd, bEnd);
+  return Math.max(0, end - start);
+}
+
+function activeElapsedMs(now) {
+  if (!state.activeTimer) return 0;
+  return Math.max(0, now - state.activeTimer.startedAt);
+}
+
+function totalDurationMs(sessions, projectId, now) {
+  let total = 0;
+  for (const s of sessions) {
+    if (projectId && s.projectId !== projectId) continue;
+    total += Math.max(0, s.end - s.start);
+  }
+  if (state.activeTimer && (!projectId || state.activeTimer.projectId === projectId)) {
+    total += activeElapsedMs(now);
+  }
+  return total;
+}
+
+function todayDurationMs(sessions, projectId, now) {
+  const dayStart = startOfLocalDay(now);
+  const dayEnd = dayStart + 24 * 60 * 60 * 1000;
+  let total = 0;
+  for (const s of sessions) {
+    if (projectId && s.projectId !== projectId) continue;
+    total += overlapMs(s.start, s.end, dayStart, dayEnd);
+  }
+  if (state.activeTimer && (!projectId || state.activeTimer.projectId === projectId)) {
+    total += overlapMs(state.activeTimer.startedAt, now, dayStart, dayEnd);
+  }
+  return total;
+}
+
+function groupSessionsByDate(sessions) {
+  const groups = new Map();
+  const sorted = [...sessions].sort((a, b) => b.start - a.start);
+  for (const s of sorted) {
+    const key = localDateKey(s.start);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  }
+  return [...groups.entries()]; // [[dateKey, sessions[]], ...] は start 降順
+}
+
+// ---- タイマー操作（FR-5.2） --------------------------------------------
+function stopActiveTimer(reason) {
+  if (!state.activeTimer) return { discarded: false, session: null, project: null };
+  const { projectId, startedAt } = state.activeTimer;
+  const project = getProject(projectId);
+  const end = Date.now();
+  const duration = end - startedAt;
+  state.activeTimer = null;
+
+  if (duration < MIN_SESSION_MS) {
+    scheduleSave();
+    return { discarded: true, session: null, project, duration };
+  }
+  const session = { id: uid(), projectId, start: startedAt, end };
+  state.sessions.push(session);
+  scheduleSave();
+  return { discarded: false, session, project, duration };
+}
+
+function startTimer(projectId) {
+  if (state.activeTimer && state.activeTimer.projectId !== projectId) {
+    const result = stopActiveTimer("switched");
+    if (result.project) {
+      if (result.discarded) {
+        showToast(`${result.project.name} の計測を破棄しました（${formatDuration(result.duration)} 未満）`);
+      } else {
+        showToast(`${result.project.name} を停止しました（${formatDuration(result.session.end - result.session.start)}）`);
+      }
+    }
+  } else if (state.activeTimer && state.activeTimer.projectId === projectId) {
+    return; // already running this project
+  }
+  state.activeTimer = { projectId, startedAt: Date.now(), lastHeartbeat: Date.now() };
+  scheduleSave();
+  render();
+}
+
+function stopTimerManual(projectId) {
+  if (!state.activeTimer || state.activeTimer.projectId !== projectId) return;
+  const result = stopActiveTimer("manual");
+  if (result.discarded) {
+    showToast(`${result.project.name} の計測を破棄しました（${formatDuration(result.duration)} 未満のため）`);
+  }
+  render();
+}
+
+function checkMaxSessionLength() {
+  if (!state.activeTimer) return false;
+  if (activeElapsedMs(Date.now()) <= MAX_SESSION_MS) return false;
+  const result = stopActiveTimer("max-length");
+  if (result.project) {
+    showToast(`${result.project.name} は${MAX_SESSION_MS / 3600000}時間を超えたため自動停止しました`, "warn");
+  }
+  return true;
+}
+
+function runHeartbeat() {
+  if (!state.activeTimer) return;
+  state.activeTimer.lastHeartbeat = Date.now();
+  scheduleSave();
+}
+
+// ---- 起動時の復帰確認（FR-5.2-6） --------------------------------------
+function checkRecoveryOnLoad() {
+  if (!state.activeTimer) return;
+  const idle = Date.now() - state.activeTimer.lastHeartbeat;
+  if (idle <= RECOVERY_THRESHOLD_MS) return;
+  showRecoveryDialog();
+}
+
+function showRecoveryDialog() {
+  const project = getProject(state.activeTimer.projectId);
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.id = "recoveryOverlay";
+  const lastSeen = formatDateTime(state.activeTimer.lastHeartbeat);
+  overlay.innerHTML = `
+    <div class="modal">
+      <h2>停止し忘れの可能性があります</h2>
+      <p>「${escapeHtml(project ? project.name : "不明なプロジェクト")}」のタイマーが稼働中のまま、最終確認（${lastSeen}）から時間が経過しています。どう扱いますか？</p>
+      <div class="modal-actions">
+        <button class="recommended" data-action="stop-at-heartbeat">最終確認時刻（${lastSeen}）で停止する（推奨）</button>
+        <button data-action="continue">そのまま現在時刻まで継続する</button>
+        <button data-action="discard">このセッションを破棄する</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelectorAll("button[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => resolveRecovery(btn.dataset.action));
+  });
+}
+
+function resolveRecovery(action) {
+  const { projectId, startedAt, lastHeartbeat } = state.activeTimer;
+  if (action === "stop-at-heartbeat") {
+    state.activeTimer = null;
+    const duration = lastHeartbeat - startedAt;
+    if (duration >= MIN_SESSION_MS) {
+      state.sessions.push({ id: uid(), projectId, start: startedAt, end: lastHeartbeat });
+    }
+  } else if (action === "continue") {
+    state.activeTimer.lastHeartbeat = Date.now();
+  } else if (action === "discard") {
+    state.activeTimer = null;
+  }
+  scheduleSave();
+  const overlay = document.getElementById("recoveryOverlay");
+  if (overlay) overlay.remove();
+  render();
+}
+
+// ---- プロジェクト操作（FR-5.1） ----------------------------------------
+function addProject(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  state.projects.push({
+    id: uid(), name: trimmed, color: pickColor(), createdAt: Date.now(), archived: false
+  });
+  scheduleSave();
+  render();
+}
+
+function renameProject(id, newName) {
+  const p = getProject(id);
+  if (!p) return;
+  const trimmed = newName.trim();
+  if (trimmed) p.name = trimmed;
+  scheduleSave();
+  render();
+}
+
+function archiveProject(id) {
+  const p = getProject(id);
+  if (!p) return;
+  if (state.activeTimer && state.activeTimer.projectId === id) {
+    stopActiveTimer("archived");
+  }
+  p.archived = true;
+  scheduleSave();
+  render();
+}
+
+function unarchiveProject(id) {
+  const p = getProject(id);
+  if (!p) return;
+  p.archived = false;
+  scheduleSave();
+  render();
+}
+
+function deleteProjectPermanently(id) {
+  const p = getProject(id);
+  if (!p || !p.archived) return;
+  if (!confirm(`「${p.name}」を完全に削除しますか？関連する記録もすべて削除され、元に戻せません。`)) return;
+  state.projects = state.projects.filter(pr => pr.id !== id);
+  state.sessions = state.sessions.filter(s => s.projectId !== id);
+  scheduleSave();
+  render();
+}
+
+// ---- セッション編集（FR-5.3-4） -----------------------------------------
+function deleteSession(id) {
+  state.sessions = state.sessions.filter(s => s.id !== id);
+  scheduleSave();
+  render();
+}
+
+function saveSessionEdit(id, endValue, note) {
+  const s = state.sessions.find(s => s.id === id);
+  if (!s) return;
+  const newEnd = fromDatetimeLocalValue(endValue);
+  if (!isNaN(newEnd) && newEnd > s.start) {
+    s.end = newEnd;
+  }
+  s.note = note.trim() || undefined;
+  editingSessionId = null;
+  scheduleSave();
+  render();
+}
+
+// ---- エクスポート（FR-5.5-4/5） -----------------------------------------
+function downloadBlob(filename, content, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportJson() {
+  downloadBlob(`koyomi-export-${localDateKey(Date.now())}.json`, JSON.stringify(state, null, 2), "application/json");
+}
+
+function csvEscape(value) {
+  const str = String(value ?? "");
+  if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+  return str;
+}
+
+function exportCsv() {
+  const header = ["id", "projectId", "projectName", "start_iso", "end_iso", "duration_sec", "note"];
+  const rows = [header.join(",")];
+  for (const s of state.sessions) {
+    const project = getProject(s.projectId);
+    rows.push([
+      s.id, s.projectId, project ? project.name : "",
+      new Date(s.start).toISOString(), new Date(s.end).toISOString(),
+      Math.round((s.end - s.start) / 1000), s.note || ""
+    ].map(csvEscape).join(","));
+  }
+  downloadBlob(`koyomi-sessions-${localDateKey(Date.now())}.csv`, rows.join("\n"), "text/csv");
+}
+
+// ---- トースト（FR-5.2-4/7, FR-5.6-1） -----------------------------------
+function showToast(message, kind) {
+  const container = document.getElementById("toastContainer");
+  const el = document.createElement("div");
+  el.className = "toast" + (kind === "warn" ? " warn" : "");
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+// ---- 描画 --------------------------------------------------------------
 function render() {
   const list = document.getElementById("projectList");
   const empty = document.getElementById("emptyState");
   list.innerHTML = "";
 
-  if (projects.length === 0) {
-    empty.style.display = "block";
-  } else {
-    empty.style.display = "none";
-  }
+  const visibleProjects = state.projects.filter(p => showArchived || !p.archived);
+  empty.style.display = state.projects.length === 0 ? "block" : "none";
 
-  let allMs = 0;
-  let todayMs = 0;
+  const now = Date.now();
   let runningCount = 0;
-
-  for (const p of projects) {
-    allMs += projectTotalMs(p, true);
-    todayMs += projectTodayMs(p, true);
-    if (p.running) runningCount++;
-
-    const card = document.createElement("div");
-    card.className = "project-card" + (p.running ? " running" : "");
-
-    const colorDot = document.createElement("div");
-    colorDot.className = "project-color";
-    colorDot.style.background = p.color;
-
-    const info = document.createElement("div");
-    info.className = "project-info";
-    const nameEl = document.createElement("div");
-    nameEl.className = "project-name";
-    nameEl.textContent = p.name;
-    nameEl.title = "クリックで編集";
-    nameEl.style.cursor = "text";
-    nameEl.addEventListener("click", () => startRename(p.id, nameEl));
-
-    const metaEl = document.createElement("div");
-    metaEl.className = "project-meta";
-    const sessionCount = p.sessions.length + (p.running ? 1 : 0);
-    metaEl.textContent = `本日 ${formatDuration(projectTodayMs(p, true))} ・ セッション ${sessionCount}件`;
-
-    info.appendChild(nameEl);
-    info.appendChild(metaEl);
-
-    const historyWrap = document.createElement("div");
-    historyWrap.className = "history";
-    const toggleBtn = document.createElement("button");
-    toggleBtn.className = "history-toggle";
-    const isExpanded = expandedHistory.has(p.id);
-    toggleBtn.textContent = isExpanded ? "履歴を隠す ▲" : `履歴を見る (${p.sessions.length}) ▼`;
-    toggleBtn.addEventListener("click", () => {
-      if (expandedHistory.has(p.id)) expandedHistory.delete(p.id);
-      else expandedHistory.add(p.id);
-      render();
-    });
-    historyWrap.appendChild(toggleBtn);
-
-    if (isExpanded) {
-      const histList = document.createElement("div");
-      histList.className = "history-list";
-      if (p.sessions.length === 0) {
-        const none = document.createElement("div");
-        none.textContent = "まだ記録がありません";
-        histList.appendChild(none);
-      } else {
-        [...p.sessions].reverse().slice(0, 20).forEach(s => {
-          const row = document.createElement("div");
-          row.className = "history-row";
-          const label = document.createElement("span");
-          label.textContent = `${formatDateTime(s.start)} 〜 ${formatDateTime(s.end)}`;
-          const dur = document.createElement("span");
-          dur.className = "dur";
-          dur.textContent = formatDuration(s.end - s.start);
-          row.appendChild(label);
-          row.appendChild(dur);
-          histList.appendChild(row);
-        });
-      }
-      historyWrap.appendChild(histList);
-    }
-
-    const timerEl = document.createElement("div");
-    timerEl.className = "project-timer";
-    timerEl.dataset.projectId = p.id;
-    timerEl.textContent = formatDuration(projectTotalMs(p, true));
-
-    const actions = document.createElement("div");
-    actions.className = "project-actions";
-
-    const toggleTimerBtn = document.createElement("button");
-    toggleTimerBtn.className = "btn " + (p.running ? "stop" : "start");
-    toggleTimerBtn.textContent = p.running ? "⏸" : "▶";
-    toggleTimerBtn.title = p.running ? "停止" : "開始";
-    toggleTimerBtn.addEventListener("click", () => toggleTimer(p.id));
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "btn delete";
-    deleteBtn.textContent = "✕";
-    deleteBtn.title = "削除";
-    deleteBtn.addEventListener("click", () => deleteProject(p.id));
-
-    actions.appendChild(toggleTimerBtn);
-    actions.appendChild(deleteBtn);
-
-    const mainRow = document.createElement("div");
-    mainRow.style.display = "contents";
-
-    card.appendChild(colorDot);
-    card.appendChild(info);
-    card.appendChild(timerEl);
-    card.appendChild(actions);
-
-    const cardWrap = document.createElement("div");
-    cardWrap.appendChild(card);
-    cardWrap.appendChild(historyWrap);
-    cardWrap.style.background = "var(--panel)";
-    cardWrap.style.border = "1px solid var(--border)";
-    cardWrap.style.borderRadius = "10px";
-    cardWrap.style.padding = "0 18px 10px";
-    card.style.border = "none";
-    card.style.background = "transparent";
-    card.style.padding = "16px 0";
-    if (p.running) {
-      cardWrap.style.borderColor = "var(--green)";
-    }
-
-    list.appendChild(cardWrap);
+  for (const p of state.projects) {
+    if (state.activeTimer && state.activeTimer.projectId === p.id) runningCount++;
   }
 
-  document.getElementById("totalAll").textContent = formatDuration(allMs);
-  document.getElementById("totalToday").textContent = formatDuration(todayMs);
+  for (const p of visibleProjects) {
+    list.appendChild(renderProjectCard(p, now));
+  }
+
+  document.getElementById("totalAll").textContent = formatDuration(totalDurationMs(state.sessions, null, now));
+  document.getElementById("totalToday").textContent = formatDuration(todayDurationMs(state.sessions, null, now));
   document.getElementById("runningCount").textContent = String(runningCount);
 }
 
+function renderProjectCard(p, now) {
+  const isRunning = !!(state.activeTimer && state.activeTimer.projectId === p.id);
+  const projectSessions = state.sessions.filter(s => s.projectId === p.id);
+
+  const cardWrap = document.createElement("div");
+  cardWrap.className = "project-wrap" + (isRunning ? " running" : "") + (p.archived ? " archived" : "");
+
+  const card = document.createElement("div");
+  card.className = "project-card";
+
+  const colorDot = document.createElement("div");
+  colorDot.className = "project-color";
+  colorDot.style.background = p.color;
+
+  const info = document.createElement("div");
+  info.className = "project-info";
+  const nameEl = document.createElement("div");
+  nameEl.className = "project-name";
+  nameEl.textContent = p.name;
+  if (!p.archived) {
+    nameEl.title = "クリックで編集";
+    nameEl.addEventListener("click", () => startRename(p.id, nameEl));
+  }
+
+  const metaEl = document.createElement("div");
+  metaEl.className = "project-meta";
+  const sessionCount = projectSessions.length + (isRunning ? 1 : 0);
+  metaEl.textContent = `本日 ${formatDuration(todayDurationMs(state.sessions, p.id, now))} ・ セッション ${sessionCount}件` + (p.archived ? " ・ アーカイブ済み" : "");
+
+  info.appendChild(nameEl);
+  info.appendChild(metaEl);
+
+  const timerEl = document.createElement("div");
+  timerEl.className = "project-timer";
+  timerEl.dataset.projectId = p.id;
+  timerEl.textContent = formatDuration(totalDurationMs(state.sessions, p.id, now));
+
+  const actions = document.createElement("div");
+  actions.className = "project-actions";
+
+  if (!p.archived) {
+    const toggleTimerBtn = document.createElement("button");
+    toggleTimerBtn.className = "btn " + (isRunning ? "stop" : "start");
+    toggleTimerBtn.textContent = isRunning ? "⏸" : "▶";
+    toggleTimerBtn.title = isRunning ? "停止" : "開始";
+    toggleTimerBtn.addEventListener("click", () => isRunning ? stopTimerManual(p.id) : startTimer(p.id));
+    actions.appendChild(toggleTimerBtn);
+  }
+
+  const menuWrap = document.createElement("div");
+  menuWrap.className = "menu-wrap";
+  const menuBtn = document.createElement("button");
+  menuBtn.className = "btn";
+  menuBtn.textContent = "⋮";
+  menuBtn.title = "メニュー";
+  menuBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openMenuProjectId = openMenuProjectId === p.id ? null : p.id;
+    render();
+  });
+  menuWrap.appendChild(menuBtn);
+
+  if (openMenuProjectId === p.id) {
+    const dropdown = document.createElement("div");
+    dropdown.className = "menu-dropdown";
+    if (!p.archived) {
+      const archiveBtn = document.createElement("button");
+      archiveBtn.textContent = "アーカイブ";
+      archiveBtn.addEventListener("click", () => { openMenuProjectId = null; archiveProject(p.id); });
+      dropdown.appendChild(archiveBtn);
+    } else {
+      const restoreBtn = document.createElement("button");
+      restoreBtn.textContent = "復元";
+      restoreBtn.addEventListener("click", () => { openMenuProjectId = null; unarchiveProject(p.id); });
+      dropdown.appendChild(restoreBtn);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "danger";
+      deleteBtn.textContent = "完全削除";
+      deleteBtn.addEventListener("click", () => { openMenuProjectId = null; deleteProjectPermanently(p.id); });
+      dropdown.appendChild(deleteBtn);
+    }
+    menuWrap.appendChild(dropdown);
+  }
+  actions.appendChild(menuWrap);
+
+  card.appendChild(colorDot);
+  card.appendChild(info);
+  card.appendChild(timerEl);
+  card.appendChild(actions);
+
+  cardWrap.appendChild(card);
+  cardWrap.appendChild(renderHistorySection(p, projectSessions));
+
+  return cardWrap;
+}
+
+function renderHistorySection(p, projectSessions) {
+  const historyWrap = document.createElement("div");
+  historyWrap.className = "history";
+
+  const toggleBtn = document.createElement("button");
+  toggleBtn.className = "history-toggle";
+  const isExpanded = expandedHistory.has(p.id);
+  toggleBtn.textContent = isExpanded ? "履歴を隠す ▲" : `履歴を見る (${projectSessions.length}) ▼`;
+  toggleBtn.addEventListener("click", () => {
+    if (expandedHistory.has(p.id)) expandedHistory.delete(p.id);
+    else expandedHistory.add(p.id);
+    render();
+  });
+  historyWrap.appendChild(toggleBtn);
+
+  if (!isExpanded) return historyWrap;
+
+  const groupsWrap = document.createElement("div");
+  groupsWrap.className = "history-groups";
+
+  if (projectSessions.length === 0) {
+    const none = document.createElement("div");
+    none.className = "history-list";
+    none.textContent = "まだ記録がありません";
+    groupsWrap.appendChild(none);
+    historyWrap.appendChild(groupsWrap);
+    return historyWrap;
+  }
+
+  const groups = groupSessionsByDate(projectSessions);
+  const recentCutoff = startOfLocalDay(Date.now()) - (HISTORY_RECENT_DAYS - 1) * 86400000;
+  const recentGroups = groups.filter(([key]) => new Date(key).getTime() >= recentCutoff);
+  const olderGroups = groups.filter(([key]) => new Date(key).getTime() < recentCutoff);
+  const olderExpanded = expandedOlder.has(p.id);
+  const groupsToShow = olderExpanded ? groups : recentGroups;
+
+  for (const [dateKey, sessions] of groupsToShow) {
+    const groupEl = document.createElement("div");
+    const titleEl = document.createElement("div");
+    titleEl.className = "history-group-title";
+    titleEl.textContent = dateKey;
+    groupEl.appendChild(titleEl);
+
+    const listEl = document.createElement("div");
+    listEl.className = "history-list";
+    for (const s of sessions) {
+      listEl.appendChild(renderSessionRow(p, s));
+    }
+    groupEl.appendChild(listEl);
+    groupsWrap.appendChild(groupEl);
+  }
+
+  if (!olderExpanded && olderGroups.length > 0) {
+    const moreBtn = document.createElement("button");
+    moreBtn.className = "show-more-btn";
+    moreBtn.textContent = `もっと見る（${olderGroups.length}日分）`;
+    moreBtn.addEventListener("click", () => { expandedOlder.add(p.id); render(); });
+    groupsWrap.appendChild(moreBtn);
+  }
+
+  historyWrap.appendChild(groupsWrap);
+  return historyWrap;
+}
+
+function renderSessionRow(project, session) {
+  if (editingSessionId === session.id) {
+    const editWrap = document.createElement("div");
+    editWrap.className = "session-edit";
+
+    const endLabel = document.createElement("label");
+    endLabel.textContent = "終了時刻";
+    const endInput = document.createElement("input");
+    endInput.type = "datetime-local";
+    endInput.value = toDatetimeLocalValue(session.end);
+
+    const noteLabel = document.createElement("label");
+    noteLabel.textContent = "メモ";
+    const noteInput = document.createElement("input");
+    noteInput.type = "text";
+    noteInput.maxLength = 200;
+    noteInput.value = session.note || "";
+    noteInput.placeholder = "何をしていたか（任意）";
+
+    const actionsRow = document.createElement("div");
+    actionsRow.className = "session-edit-actions";
+    const saveBtn = document.createElement("button");
+    saveBtn.className = "primary";
+    saveBtn.textContent = "保存";
+    saveBtn.addEventListener("click", () => saveSessionEdit(session.id, endInput.value, noteInput.value));
+    const cancelBtn = document.createElement("button");
+    cancelBtn.textContent = "キャンセル";
+    cancelBtn.addEventListener("click", () => { editingSessionId = null; render(); });
+    actionsRow.appendChild(cancelBtn);
+    actionsRow.appendChild(saveBtn);
+
+    editWrap.appendChild(endLabel);
+    editWrap.appendChild(endInput);
+    editWrap.appendChild(noteLabel);
+    editWrap.appendChild(noteInput);
+    editWrap.appendChild(actionsRow);
+    return editWrap;
+  }
+
+  const row = document.createElement("div");
+  row.className = "history-row";
+
+  const left = document.createElement("div");
+  left.className = "left";
+  const timeLabel = document.createElement("span");
+  timeLabel.textContent = `${formatDateTime(session.start)} 〜 ${formatDateTime(session.end)}`;
+  left.appendChild(timeLabel);
+  if (session.note) {
+    const noteEl = document.createElement("span");
+    noteEl.className = "note";
+    noteEl.textContent = session.note;
+    left.appendChild(noteEl);
+  }
+  row.addEventListener("click", (e) => {
+    if (e.target.closest(".del")) return;
+    editingSessionId = session.id;
+    render();
+  });
+
+  const dur = document.createElement("span");
+  dur.className = "dur";
+  dur.textContent = formatDuration(session.end - session.start);
+
+  const delBtn = document.createElement("button");
+  delBtn.className = "del";
+  delBtn.textContent = "✕";
+  delBtn.title = "削除";
+  delBtn.addEventListener("click", (e) => { e.stopPropagation(); deleteSession(session.id); });
+
+  row.appendChild(left);
+  row.appendChild(dur);
+  row.appendChild(delBtn);
+  return row;
+}
+
 function startRename(id, nameEl) {
-  const p = projects.find(p => p.id === id);
+  const p = getProject(id);
   if (!p) return;
   const input = document.createElement("input");
   input.type = "text";
@@ -541,25 +922,23 @@ function startRename(id, nameEl) {
   });
 }
 
-// live tick for running timers without full re-render (avoid clobbering inputs)
+// ---- ライブ更新（保存を伴わない再計算のみ, FR-5.2-2） --------------------
 setInterval(() => {
+  if (checkMaxSessionLength()) { render(); return; }
+  const now = Date.now();
   document.querySelectorAll(".project-timer").forEach(el => {
-    const id = el.dataset.projectId;
-    const p = projects.find(p => p.id === id);
-    if (p) el.textContent = formatDuration(projectTotalMs(p, true));
+    const p = getProject(el.dataset.projectId);
+    if (p) el.textContent = formatDuration(totalDurationMs(state.sessions, p.id, now));
   });
-  const anyRunning = projects.some(p => p.running);
-  if (anyRunning) {
-    let allMs = 0, todayMs = 0;
-    for (const p of projects) {
-      allMs += projectTotalMs(p, true);
-      todayMs += projectTodayMs(p, true);
-    }
-    document.getElementById("totalAll").textContent = formatDuration(allMs);
-    document.getElementById("totalToday").textContent = formatDuration(todayMs);
+  if (state.activeTimer) {
+    document.getElementById("totalAll").textContent = formatDuration(totalDurationMs(state.sessions, null, now));
+    document.getElementById("totalToday").textContent = formatDuration(todayDurationMs(state.sessions, null, now));
   }
 }, 1000);
 
+setInterval(runHeartbeat, HEARTBEAT_INTERVAL_MS);
+
+// ---- イベント配線 --------------------------------------------------------
 document.getElementById("addProjectBtn").addEventListener("click", () => {
   const input = document.getElementById("newProjectInput");
   addProject(input.value);
@@ -569,13 +948,18 @@ document.getElementById("addProjectBtn").addEventListener("click", () => {
 document.getElementById("newProjectInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") document.getElementById("addProjectBtn").click();
 });
-
-// persist state before unload in case a timer is running
-window.addEventListener("beforeunload", () => {
-  saveProjects();
+document.getElementById("showArchivedToggle").addEventListener("change", (e) => {
+  showArchived = e.target.checked;
+  render();
+});
+document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
+document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
+document.addEventListener("click", () => {
+  if (openMenuProjectId !== null) { openMenuProjectId = null; render(); }
 });
 
 render();
+checkRecoveryOnLoad();
 </script>
 </body>
 </html>
