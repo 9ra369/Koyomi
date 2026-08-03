@@ -1,0 +1,13 @@
+{
+  "name": "koyomi",
+  "version": "0.1.0",
+  "description": "プロジェクトごとの労働時間トラッカー",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^43.2.0"
+  }
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'">
+<title>Koyomi</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Koyomi</h1>
+    <div class="subtitle">プロジェクト労働時間トラッカー</div>
+  </header>
+
+  <div class="container">
+    <div class="add-project">
+      <input type="text" id="newProjectInput" placeholder="新しいプロジェクト名を入力…" maxlength="60">
+      <button id="addProjectBtn">追加</button>
+    </div>
+
+    <div class="toolbar">
+      <label class="toolbar-left">
+        <input type="checkbox" id="showArchivedToggle">
+        アーカイブ済みを表示
+      </label>
+      <div class="toolbar-right">
+        <button class="ghost" id="exportJsonBtn">JSONエクスポート</button>
+        <button class="ghost" id="exportCsvBtn">CSVエクスポート</button>
+      </div>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-card">
+        <div class="label">全プロジェクト合計</div>
+        <div class="value" id="totalAll">00:00:00</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">本日の合計</div>
+        <div class="value" id="totalToday">00:00:00</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">稼働中プロジェクト</div>
+        <div class="value" id="runningCount">0</div>
+      </div>
+    </div>
+
+    <div class="project-list" id="projectList"></div>
+    <div class="empty" id="emptyState" style="display:none;">プロジェクトがまだありません。上のフォームから追加してください。</div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

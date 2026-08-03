@@ -1,6 +1,11 @@
 # Dependencies
 node_modules/
 
+# App data (local, per-machine — see data/.gitkeep)
+data/*.json
+data/*.bak
+data/*.tmp
+
 # Build output
 dist/
 build/

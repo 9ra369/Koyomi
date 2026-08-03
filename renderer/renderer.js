@@ -1,272 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Koyomi - 労働時間トラッカー</title>
-<style>
-  :root {
-    --bg: #0f1115;
-    --panel: #171a21;
-    --panel-2: #1e222b;
-    --panel-3: #262b36;
-    --border: #2a2f3a;
-    --text: #e6e8ec;
-    --muted: #8b93a3;
-    --accent: #4f8cff;
-    --accent-dim: #2f4d8a;
-    --green: #3ecf8e;
-    --red: #ef5a5a;
-    --amber: #f5a623;
-    --radius: 10px;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-  header {
-    padding: 24px 32px 12px;
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-  header h1 { font-size: 20px; margin: 0; font-weight: 600; letter-spacing: 0.02em; }
-  header .subtitle { color: var(--muted); font-size: 13px; }
-
-  .container { max-width: 920px; margin: 0 auto; padding: 24px 20px 60px; }
-
-  .add-project { display: flex; gap: 8px; margin-bottom: 16px; }
-  .add-project input {
-    flex: 1; background: var(--panel); border: 1px solid var(--border);
-    color: var(--text); padding: 10px 14px; border-radius: var(--radius);
-    font-size: 14px; outline: none;
-  }
-  .add-project input:focus { border-color: var(--accent); }
-  .add-project button {
-    background: var(--accent); color: white; border: none; padding: 10px 18px;
-    border-radius: var(--radius); font-size: 14px; cursor: pointer; font-weight: 600;
-  }
-  .add-project button:hover { background: #6a9fff; }
-
-  .toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 20px; gap: 12px; flex-wrap: wrap;
-  }
-  .toolbar-left { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
-  .toolbar-right { display: flex; gap: 8px; }
-  .toolbar button.ghost {
-    background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    padding: 7px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
-  }
-  .toolbar button.ghost:hover { border-color: var(--accent); }
-
-  .summary-bar { display: flex; gap: 16px; margin-bottom: 24px; }
-  .summary-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; flex: 1; }
-  .summary-card .label { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
-  .summary-card .value { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
-
-  .section-label { color: var(--muted); font-size: 12px; margin: 20px 0 8px; letter-spacing: 0.04em; }
-
-  .project-list { display: flex; flex-direction: column; gap: 10px; }
-  .project-wrap {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 0 18px 10px;
-  }
-  .project-wrap.running { border-color: var(--green); }
-  .project-wrap.archived { opacity: 0.6; }
-
-  .project-card { display: flex; align-items: center; gap: 16px; padding: 16px 0; position: relative; }
-  .project-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .project-info { flex: 1; min-width: 0; }
-  .project-name {
-    font-size: 15px; font-weight: 600; margin-bottom: 4px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: text;
-  }
-  .project-name input {
-    background: transparent; border: none; border-bottom: 1px dashed var(--accent);
-    color: var(--text); font-size: 15px; font-weight: 600; outline: none; width: 100%; padding: 0;
-  }
-  .project-meta { color: var(--muted); font-size: 12px; }
-  .project-timer {
-    font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 600;
-    min-width: 110px; text-align: right; color: var(--text);
-  }
-  .project-wrap.running .project-timer { color: var(--green); }
-  .project-actions { display: flex; gap: 6px; align-items: center; }
-  .btn {
-    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
-    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; font-size: 15px;
-  }
-  .btn:hover { border-color: var(--accent); }
-  .btn.start { color: var(--green); }
-  .btn.stop { color: var(--red); }
-  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-  .menu-wrap { position: relative; }
-  .menu-dropdown {
-    position: absolute; top: 42px; right: 0; background: var(--panel-3);
-    border: 1px solid var(--border); border-radius: 8px; min-width: 140px;
-    z-index: 20; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  }
-  .menu-dropdown button {
-    display: block; width: 100%; text-align: left; background: none; border: none;
-    color: var(--text); padding: 9px 12px; font-size: 13px; cursor: pointer;
-  }
-  .menu-dropdown button:hover { background: var(--panel-2); }
-  .menu-dropdown button.danger { color: var(--red); }
-
-  .history { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
-  .history-toggle { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 4px 0; }
-  .history-toggle:hover { color: var(--accent); }
-  .history-groups { margin-top: 6px; display: flex; flex-direction: column; gap: 10px; }
-  .history-group-title { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-  .history-list { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-  .history-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 5px 8px; background: var(--panel-2); border-radius: 6px; cursor: pointer; gap: 8px;
-  }
-  .history-row:hover { background: var(--panel-3); }
-  .history-row .left { display: flex; flex-direction: column; min-width: 0; }
-  .history-row .note { color: var(--muted); font-size: 11px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .history-row .dur { font-variant-numeric: tabular-nums; color: var(--text); flex-shrink: 0; }
-  .history-row .del {
-    background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; flex-shrink: 0;
-  }
-  .history-row .del:hover { color: var(--red); }
-  .history-row .approve,
-  .history-row .reject {
-    border: 1px solid var(--border); background: var(--panel-3); color: var(--text);
-    font-size: 11px; padding: 4px 8px; border-radius: 6px; cursor: pointer; flex-shrink: 0;
-  }
-  .history-row .approve { color: var(--green); border-color: var(--green); }
-  .history-row .approve:hover { background: rgba(62,207,142,0.12); }
-  .history-row .reject { color: var(--red); }
-  .history-row .reject:hover { border-color: var(--red); background: rgba(239,90,90,0.12); }
-
-  .pill-row { display: flex; gap: 4px; margin: 2px 0; }
-  .status-pill {
-    display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px;
-    border: 1px solid var(--border); color: var(--muted); width: fit-content;
-  }
-  .status-pill.manual { color: var(--accent); border-color: var(--accent-dim); }
-  .status-pill.pending { color: var(--amber); border-color: var(--amber); }
-  .status-pill.rejected { color: var(--red); border-color: var(--red); }
-  .show-more-btn {
-    background: none; border: 1px dashed var(--border); color: var(--muted);
-    font-size: 11px; padding: 5px 10px; border-radius: 6px; cursor: pointer; align-self: flex-start;
-  }
-  .show-more-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  .session-edit {
-    background: var(--panel-3); border-radius: 6px; padding: 8px; display: flex;
-    flex-direction: column; gap: 6px; font-size: 12px;
-  }
-  .session-edit label { color: var(--muted); font-size: 11px; }
-  .session-edit input[type="datetime-local"],
-  .session-edit input[type="text"] {
-    background: var(--panel); border: 1px solid var(--border); color: var(--text);
-    padding: 5px 8px; border-radius: 6px; font-size: 12px; outline: none; width: 100%;
-  }
-  .session-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
-  .session-edit-actions button {
-    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
-    padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;
-  }
-  .session-edit-actions button.primary { background: var(--accent); border-color: var(--accent); }
-
-  .empty { text-align: center; color: var(--muted); padding: 60px 20px; font-size: 14px; }
-
-  .toast-container {
-    position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column;
-    gap: 8px; z-index: 100;
-  }
-  .toast {
-    background: var(--panel-3); border: 1px solid var(--border); color: var(--text);
-    padding: 10px 16px; border-radius: 8px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    max-width: 320px;
-  }
-  .toast.warn { border-color: var(--amber); }
-
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex;
-    align-items: center; justify-content: center; z-index: 200;
-  }
-  .modal {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
-    padding: 24px; max-width: 420px; width: 90%;
-  }
-  .modal h2 { font-size: 16px; margin: 0 0 8px; }
-  .modal p { font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0 0 16px; }
-  .modal-form { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
-  .modal-form label { font-size: 11px; color: var(--muted); }
-  .modal-form input {
-    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
-    padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none; width: 100%;
-  }
-  .modal-form input:focus { border-color: var(--accent); }
-  .modal-actions { display: flex; flex-direction: column; gap: 8px; }
-  .modal-actions button {
-    border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
-    padding: 10px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; text-align: left;
-  }
-  .modal-actions button:hover { border-color: var(--accent); }
-  .modal-actions button.recommended { border-color: var(--accent); background: var(--accent-dim); }
-</style>
-</head>
-<body>
-  <header>
-    <h1>Koyomi</h1>
-    <div class="subtitle">プロジェクト労働時間トラッカー（デモ）</div>
-  </header>
-
-  <div class="container">
-    <div class="add-project">
-      <input type="text" id="newProjectInput" placeholder="新しいプロジェクト名を入力…" maxlength="60">
-      <button id="addProjectBtn">追加</button>
-    </div>
-
-    <div class="toolbar">
-      <label class="toolbar-left">
-        <input type="checkbox" id="showArchivedToggle">
-        アーカイブ済みを表示
-      </label>
-      <div class="toolbar-right">
-        <button class="ghost" id="exportJsonBtn">JSONエクスポート</button>
-        <button class="ghost" id="exportCsvBtn">CSVエクスポート</button>
-      </div>
-    </div>
-
-    <div class="summary-bar">
-      <div class="summary-card">
-        <div class="label">全プロジェクト合計</div>
-        <div class="value" id="totalAll">00:00:00</div>
-      </div>
-      <div class="summary-card">
-        <div class="label">本日の合計</div>
-        <div class="value" id="totalToday">00:00:00</div>
-      </div>
-      <div class="summary-card">
-        <div class="label">稼働中プロジェクト</div>
-        <div class="value" id="runningCount">0</div>
-      </div>
-    </div>
-
-    <div class="project-list" id="projectList"></div>
-    <div class="empty" id="emptyState" style="display:none;">プロジェクトがまだありません。上のフォームから追加してください。</div>
-  </div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
-<script>
 // ---- 定数 -----------------------------------------------------------
-const STORAGE_KEY = "koyomi.state.v1";
-const OLD_STORAGE_KEY = "koyomi.projects.v1"; // v0（旧デモ）からの移行用
 const COLORS = ["#4f8cff","#3ecf8e","#f5a623","#ef5a5a","#b06cff","#25c2c2","#ff7ab6","#c9d34c"];
 
 const MIN_SESSION_MS = 10 * 1000;              // FR-5.2-8
@@ -278,7 +10,7 @@ const SAVE_DEBOUNCE_MS = 500;                  // FR-5.5-3
 
 // ---- 状態（AppState, SPEC.md §7） ------------------------------------
 /** @type {{schemaVersion:1, projects:object[], sessions:object[], activeTimer:object|null}} */
-let state = normalizeState(loadState());
+let state = { schemaVersion: 1, projects: [], sessions: [], activeTimer: null };
 let expandedHistory = new Set();
 let expandedOlder = new Set();
 let editingSessionId = null;
@@ -286,58 +18,10 @@ let openMenuProjectId = null;
 let showArchived = false;
 let saveTimer = null;
 
-// ---- 永続化（ADR-1, ADR-6, §8） ---------------------------------------
-function migrateFromV0(oldProjects) {
-  const projects = [];
-  const sessions = [];
-  let activeTimer = null;
-  for (const p of oldProjects) {
-    projects.push({ id: p.id, name: p.name, color: p.color, createdAt: p.createdAt, archived: false });
-    for (const s of (p.sessions || [])) {
-      sessions.push({ id: uid(), projectId: p.id, start: s.start, end: s.end });
-    }
-    if (p.running && p.currentStart) {
-      activeTimer = { projectId: p.id, startedAt: p.currentStart, lastHeartbeat: Date.now() };
-    }
-  }
-  return { schemaVersion: 1, projects, sessions, activeTimer };
-}
-
-// FR-5.7-2 追加前の旧データには source/status が無いため、実測扱いとして補完する
-function normalizeState(s) {
-  for (const session of s.sessions) {
-    if (!session.source) session.source = "timer";
-    if (!session.status) session.status = "approved";
-  }
-  return s;
-}
-
-function loadState() {
+// ---- 永続化（ADR-1/2, §8: メインプロセス経由でファイルに保存） -----------
+async function persistNow() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      if (data && data.schemaVersion === 1) return data;
-    }
-    const oldRaw = localStorage.getItem(OLD_STORAGE_KEY);
-    if (oldRaw) {
-      const oldProjects = JSON.parse(oldRaw);
-      if (Array.isArray(oldProjects)) {
-        const migrated = migrateFromV0(oldProjects);
-        localStorage.removeItem(OLD_STORAGE_KEY);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-        return migrated;
-      }
-    }
-  } catch (e) {
-    console.error("state load failed, falling back to empty state", e);
-  }
-  return { schemaVersion: 1, projects: [], sessions: [], activeTimer: null };
-}
-
-function persistNow() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    await window.koyomi.saveState(state);
   } catch (e) {
     console.error("save failed", e);
     showToast("保存に失敗しました", "warn");
@@ -348,8 +32,6 @@ function scheduleSave() {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(persistNow, SAVE_DEBOUNCE_MS);
 }
-
-window.addEventListener("beforeunload", persistNow);
 
 // ---- ユーティリティ ---------------------------------------------------
 function uid() {
@@ -1121,8 +803,19 @@ document.addEventListener("click", () => {
   if (openMenuProjectId !== null) { openMenuProjectId = null; render(); }
 });
 
-render();
-checkRecoveryOnLoad();
-</script>
-</body>
-</html>
+// ---- 起動 ----------------------------------------------------------------
+// FR-5.7-2 追加前の旧データには source/status が無いため、実測扱いとして補完する
+function normalizeState(s) {
+  for (const session of s.sessions) {
+    if (!session.source) session.source = "timer";
+    if (!session.status) session.status = "approved";
+  }
+  return s;
+}
+
+async function init() {
+  state = normalizeState(await window.koyomi.loadState());
+  render();
+  checkRecoveryOnLoad();
+}
+init();
