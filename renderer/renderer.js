@@ -17,6 +17,7 @@ let editingSessionId = null;
 let openMenuProjectId = null;
 let showArchived = false;
 let saveTimer = null;
+let viewedMonthKey = monthKeyOf(Date.now()); // FR-5.8-1: 既定値は現在の月
 
 // ---- 永続化（ADR-1/2, §8: メインプロセス経由でファイルに保存） -----------
 async function persistNow() {
@@ -79,6 +80,32 @@ function startOfLocalDay(ts) {
   return d.getTime();
 }
 
+// ---- 月ユーティリティ（FR-5.8, ADR-11） --------------------------------
+function monthKeyOf(ts) {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function startOfMonth(monthKey) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return new Date(y, m - 1, 1).getTime();
+}
+
+function endOfMonth(monthKey) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return new Date(y, m, 1).getTime(); // 翌月1日0時
+}
+
+function shiftMonthKey(monthKey, delta) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return monthKeyOf(new Date(y, m - 1 + delta, 1).getTime());
+}
+
+function formatMonthLabel(monthKey) {
+  const [y, m] = monthKey.split("-").map(Number);
+  return `${y}年${m}月`;
+}
+
 // ---- 純粋関数: 時間計算（SPEC.md §10.1） ------------------------------
 function overlapMs(aStart, aEnd, bStart, bEnd) {
   const start = Math.max(aStart, bStart);
@@ -120,6 +147,22 @@ function todayDurationMs(sessions, projectId, now) {
   }
   if (state.activeTimer && (!projectId || state.activeTimer.projectId === projectId)) {
     total += overlapMs(state.activeTimer.startedAt, now, dayStart, dayEnd);
+  }
+  return total;
+}
+
+// FR-5.8-1/6: 閲覧中の月の合計。sessions は移動しないので、都度タイムスタンプから算出する
+function monthDurationMs(sessions, projectId, monthKey, now) {
+  const monthStart = startOfMonth(monthKey);
+  const monthEnd = endOfMonth(monthKey);
+  let total = 0;
+  for (const s of sessions) {
+    if (projectId && s.projectId !== projectId) continue;
+    if (!isCounted(s)) continue;
+    total += overlapMs(s.start, s.end, monthStart, monthEnd);
+  }
+  if (state.activeTimer && (!projectId || state.activeTimer.projectId === projectId)) {
+    total += overlapMs(state.activeTimer.startedAt, now, monthStart, monthEnd);
   }
   return total;
 }
@@ -462,14 +505,22 @@ function render() {
     list.appendChild(renderProjectCard(p, now));
   }
 
-  document.getElementById("totalAll").textContent = formatDuration(totalDurationMs(state.sessions, null, now));
+  document.getElementById("totalMonth").textContent = formatDuration(monthDurationMs(state.sessions, null, viewedMonthKey, now));
   document.getElementById("totalToday").textContent = formatDuration(todayDurationMs(state.sessions, null, now));
   document.getElementById("runningCount").textContent = String(runningCount);
+
+  // FR-5.8-2/3: 月ナビゲーション表示
+  document.getElementById("monthLabel").textContent = formatMonthLabel(viewedMonthKey);
+  document.getElementById("nextMonthBtn").disabled = viewedMonthKey === monthKeyOf(now);
 }
 
 function renderProjectCard(p, now) {
   const isRunning = !!(state.activeTimer && state.activeTimer.projectId === p.id);
+  const isCurrentMonth = viewedMonthKey === monthKeyOf(now); // FR-5.8-4
   const projectSessions = state.sessions.filter(s => s.projectId === p.id);
+  const monthStart = startOfMonth(viewedMonthKey);
+  const monthEnd = endOfMonth(viewedMonthKey);
+  const sessionsInMonth = projectSessions.filter(s => overlapMs(s.start, s.end, monthStart, monthEnd) > 0);
 
   const cardWrap = document.createElement("div");
   cardWrap.className = "project-wrap" + (isRunning ? " running" : "") + (p.archived ? " archived" : "");
@@ -493,9 +544,10 @@ function renderProjectCard(p, now) {
 
   const metaEl = document.createElement("div");
   metaEl.className = "project-meta";
-  const approvedCount = projectSessions.filter(isCounted).length + (isRunning ? 1 : 0);
-  const pendingCount = projectSessions.filter(s => s.status === "pending").length;
-  metaEl.textContent = `本日 ${formatDuration(todayDurationMs(state.sessions, p.id, now))} ・ セッション ${approvedCount}件`
+  const approvedCount = sessionsInMonth.filter(isCounted).length + (isRunning && isCurrentMonth ? 1 : 0);
+  const pendingCount = sessionsInMonth.filter(s => s.status === "pending").length;
+  const todayPart = isCurrentMonth ? `本日 ${formatDuration(todayDurationMs(state.sessions, p.id, now))} ・ ` : "";
+  metaEl.textContent = todayPart + `セッション ${approvedCount}件`
     + (pendingCount > 0 ? ` ・ 承認待ち ${pendingCount}件` : "")
     + (p.archived ? " ・ アーカイブ済み" : "");
 
@@ -505,12 +557,12 @@ function renderProjectCard(p, now) {
   const timerEl = document.createElement("div");
   timerEl.className = "project-timer";
   timerEl.dataset.projectId = p.id;
-  timerEl.textContent = formatDuration(totalDurationMs(state.sessions, p.id, now));
+  timerEl.textContent = formatDuration(monthDurationMs(state.sessions, p.id, viewedMonthKey, now));
 
   const actions = document.createElement("div");
   actions.className = "project-actions";
 
-  if (!p.archived) {
+  if (!p.archived && isCurrentMonth) {
     const toggleTimerBtn = document.createElement("button");
     toggleTimerBtn.className = "btn " + (isRunning ? "stop" : "start");
     toggleTimerBtn.textContent = isRunning ? "⏸" : "▶";
@@ -773,10 +825,10 @@ setInterval(() => {
   const now = Date.now();
   document.querySelectorAll(".project-timer").forEach(el => {
     const p = getProject(el.dataset.projectId);
-    if (p) el.textContent = formatDuration(totalDurationMs(state.sessions, p.id, now));
+    if (p) el.textContent = formatDuration(monthDurationMs(state.sessions, p.id, viewedMonthKey, now));
   });
   if (state.activeTimer) {
-    document.getElementById("totalAll").textContent = formatDuration(totalDurationMs(state.sessions, null, now));
+    document.getElementById("totalMonth").textContent = formatDuration(monthDurationMs(state.sessions, null, viewedMonthKey, now));
     document.getElementById("totalToday").textContent = formatDuration(todayDurationMs(state.sessions, null, now));
   }
 }, 1000);
@@ -799,6 +851,15 @@ document.getElementById("showArchivedToggle").addEventListener("change", (e) => 
 });
 document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
 document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
+document.getElementById("prevMonthBtn").addEventListener("click", () => {
+  viewedMonthKey = shiftMonthKey(viewedMonthKey, -1);
+  render();
+});
+document.getElementById("nextMonthBtn").addEventListener("click", () => {
+  if (viewedMonthKey === monthKeyOf(Date.now())) return; // FR-5.8-3: 未来へは進めない
+  viewedMonthKey = shiftMonthKey(viewedMonthKey, 1);
+  render();
+});
 document.addEventListener("click", () => {
   if (openMenuProjectId !== null) { openMenuProjectId = null; render(); }
 });

@@ -6,9 +6,10 @@ data/*.json
 data/*.bak
 data/*.tmp
 
-# Build output
+# Build output (build/ itself is NOT ignored — it holds tracked icon
+# resources such as build/icon.ico; electron-builder's actual output goes
+# to dist/ or release/, not build/)
 dist/
-build/
 out/
 release/
 
