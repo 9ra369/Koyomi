@@ -69,6 +69,21 @@ function fromDatetimeLocalValue(value) {
   return new Date(value).getTime();
 }
 
+// 日付・時刻をそれぞれテキスト入力できるようにするためのフォーマッタ（datetime-local の
+// ピッカーUIが使いづらいという指摘への対応。値の意味は toDatetimeLocalValue と同じ）
+function toTimeStr(ts) {
+  const d = new Date(ts);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function isValidDateStr(v) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(v);
+}
+
+function isValidTimeStr(v) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+}
+
 function localDateKey(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -111,6 +126,19 @@ function overlapMs(aStart, aEnd, bStart, bEnd) {
   const start = Math.max(aStart, bStart);
   const end = Math.min(aEnd, bEnd);
   return Math.max(0, end - start);
+}
+
+// FR-5.7-7: 手動申請・編集が既存のセッション（または稼働中のタイマー）と時間的に
+// 重複することを防ぐ。却下済みセッションは対象外（時間を明示的に否定されているため）
+function hasOverlapWithExisting(start, end, excludeSessionId) {
+  const conflictsWithSession = state.sessions.some(s => {
+    if (s.id === excludeSessionId) return false;
+    if (s.status === "rejected") return false;
+    return overlapMs(s.start, s.end, start, end) > 0;
+  });
+  if (conflictsWithSession) return true;
+  if (state.activeTimer && overlapMs(state.activeTimer.startedAt, Date.now(), start, end) > 0) return true;
+  return false;
 }
 
 function activeElapsedMs(now) {
@@ -350,9 +378,15 @@ function saveSessionEdit(id, endValue, note) {
   const s = state.sessions.find(s => s.id === id);
   if (!s) return;
   const newEnd = fromDatetimeLocalValue(endValue);
-  if (!isNaN(newEnd) && newEnd > s.start) {
-    s.end = newEnd;
+  if (isNaN(newEnd) || newEnd <= s.start) {
+    showToast("終了日時は開始日時より後にしてください", "warn");
+    return; // 編集フォームは開いたままにし、入力し直せるようにする
   }
+  if (hasOverlapWithExisting(s.start, newEnd, id)) {
+    showToast("その時間帯は他のセッションと重複しています", "warn");
+    return;
+  }
+  s.end = newEnd;
   s.note = note.trim() || undefined;
   editingSessionId = null;
   scheduleSave();
@@ -369,6 +403,10 @@ function requestManualSession(projectId, startValue, endValue, note) {
   }
   if (end - start > 24 * 60 * 60 * 1000) {
     showToast("1件の申請は24時間以内にしてください", "warn");
+    return false;
+  }
+  if (hasOverlapWithExisting(start, end, null)) {
+    showToast("その時間帯は他のセッションと重複しています", "warn");
     return false;
   }
   state.sessions.push({
@@ -404,17 +442,23 @@ function openManualRequestModal(projectId) {
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.id = "manualRequestOverlay";
-  const defaultStart = toDatetimeLocalValue(Date.now() - 60 * 60 * 1000);
-  const defaultEnd = toDatetimeLocalValue(Date.now());
+  const defaultStart = Date.now() - 60 * 60 * 1000;
+  const defaultEnd = Date.now();
   overlay.innerHTML = `
     <div class="modal">
       <h2>作業時間を申請</h2>
       <p>「${escapeHtml(project.name)}」の作業時間を手動で申請します。承認するまで集計には含まれません。</p>
       <div class="modal-form">
-        <label for="manualStartInput">開始日時</label>
-        <input type="datetime-local" id="manualStartInput" value="${defaultStart}">
-        <label for="manualEndInput">終了日時</label>
-        <input type="datetime-local" id="manualEndInput" value="${defaultEnd}">
+        <label for="manualStartDate">開始</label>
+        <div class="datetime-row">
+          <input type="text" id="manualStartDate" value="${localDateKey(defaultStart)}" placeholder="YYYY-MM-DD">
+          <input type="text" id="manualStartTime" value="${toTimeStr(defaultStart)}" placeholder="HH:MM">
+        </div>
+        <label for="manualEndDate">終了</label>
+        <div class="datetime-row">
+          <input type="text" id="manualEndDate" value="${localDateKey(defaultEnd)}" placeholder="YYYY-MM-DD">
+          <input type="text" id="manualEndTime" value="${toTimeStr(defaultEnd)}" placeholder="HH:MM">
+        </div>
         <label for="manualNoteInput">メモ</label>
         <input type="text" id="manualNoteInput" maxlength="200" placeholder="何をしていたか（任意）">
       </div>
@@ -427,15 +471,21 @@ function openManualRequestModal(projectId) {
   document.body.appendChild(overlay);
   overlay.querySelector('[data-action="cancel"]').addEventListener("click", () => overlay.remove());
   overlay.querySelector('[data-action="submit"]').addEventListener("click", () => {
-    const startVal = document.getElementById("manualStartInput").value;
-    const endVal = document.getElementById("manualEndInput").value;
+    const sd = document.getElementById("manualStartDate").value.trim();
+    const st = document.getElementById("manualStartTime").value.trim();
+    const ed = document.getElementById("manualEndDate").value.trim();
+    const et = document.getElementById("manualEndTime").value.trim();
     const note = document.getElementById("manualNoteInput").value;
-    const ok = requestManualSession(projectId, startVal, endVal, note);
+    if (!isValidDateStr(sd) || !isValidTimeStr(st) || !isValidDateStr(ed) || !isValidTimeStr(et)) {
+      showToast("日付は YYYY-MM-DD、時刻は HH:MM の形式で入力してください", "warn");
+      return;
+    }
+    const ok = requestManualSession(projectId, `${sd}T${st}`, `${ed}T${et}`, note);
     if (ok) overlay.remove();
   });
 }
 
-// ---- エクスポート（FR-5.5-4/5） -----------------------------------------
+// ---- エクスポート（FR-5.5-4/5, ADR-12） ----------------------------------
 function downloadBlob(filename, content, mime) {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);
@@ -448,28 +498,34 @@ function downloadBlob(filename, content, mime) {
   URL.revokeObjectURL(url);
 }
 
+// エクスポート専用の日時表現。内部の保存形式（epoch ms）はそのまま残し、書き出す
+// コピー側だけを変換する（例: 2026-08-11 23:20 → "2026_0811_2320"）
+function formatExportTimestamp(ts) {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${y}_${mm}${dd}_${hh}${mi}`;
+}
+
 function exportJson() {
-  downloadBlob(`koyomi-export-${localDateKey(Date.now())}.json`, JSON.stringify(state, null, 2), "application/json");
-}
-
-function csvEscape(value) {
-  const str = String(value ?? "");
-  if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
-  return str;
-}
-
-function exportCsv() {
-  const header = ["id", "projectId", "projectName", "start_iso", "end_iso", "duration_sec", "note"];
-  const rows = [header.join(",")];
-  for (const s of state.sessions) {
-    const project = getProject(s.projectId);
-    rows.push([
-      s.id, s.projectId, project ? project.name : "",
-      new Date(s.start).toISOString(), new Date(s.end).toISOString(),
-      Math.round((s.end - s.start) / 1000), s.note || ""
-    ].map(csvEscape).join(","));
-  }
-  downloadBlob(`koyomi-sessions-${localDateKey(Date.now())}.csv`, rows.join("\n"), "text/csv");
+  const exportState = {
+    schemaVersion: state.schemaVersion,
+    projects: state.projects.map(p => ({ ...p, createdAt: formatExportTimestamp(p.createdAt) })),
+    sessions: state.sessions.map(s => ({
+      ...s,
+      start: formatExportTimestamp(s.start),
+      end: formatExportTimestamp(s.end),
+    })),
+    activeTimer: state.activeTimer ? {
+      ...state.activeTimer,
+      startedAt: formatExportTimestamp(state.activeTimer.startedAt),
+      lastHeartbeat: formatExportTimestamp(state.activeTimer.lastHeartbeat),
+    } : null,
+  };
+  downloadBlob(`koyomi-export-${localDateKey(Date.now())}.json`, JSON.stringify(exportState, null, 2), "application/json");
 }
 
 // ---- トースト（FR-5.2-4/7, FR-5.6-1） -----------------------------------
@@ -695,9 +751,18 @@ function renderSessionRow(project, session) {
 
     const endLabel = document.createElement("label");
     endLabel.textContent = "終了時刻";
-    const endInput = document.createElement("input");
-    endInput.type = "datetime-local";
-    endInput.value = toDatetimeLocalValue(session.end);
+    const endRow = document.createElement("div");
+    endRow.className = "datetime-row";
+    const endDateInput = document.createElement("input");
+    endDateInput.type = "text";
+    endDateInput.value = localDateKey(session.end);
+    endDateInput.placeholder = "YYYY-MM-DD";
+    const endTimeInput = document.createElement("input");
+    endTimeInput.type = "text";
+    endTimeInput.value = toTimeStr(session.end);
+    endTimeInput.placeholder = "HH:MM";
+    endRow.appendChild(endDateInput);
+    endRow.appendChild(endTimeInput);
 
     const noteLabel = document.createElement("label");
     noteLabel.textContent = "メモ";
@@ -712,7 +777,15 @@ function renderSessionRow(project, session) {
     const saveBtn = document.createElement("button");
     saveBtn.className = "primary";
     saveBtn.textContent = "保存";
-    saveBtn.addEventListener("click", () => saveSessionEdit(session.id, endInput.value, noteInput.value));
+    saveBtn.addEventListener("click", () => {
+      const ed = endDateInput.value.trim();
+      const et = endTimeInput.value.trim();
+      if (!isValidDateStr(ed) || !isValidTimeStr(et)) {
+        showToast("日付は YYYY-MM-DD、時刻は HH:MM の形式で入力してください", "warn");
+        return;
+      }
+      saveSessionEdit(session.id, `${ed}T${et}`, noteInput.value);
+    });
     const cancelBtn = document.createElement("button");
     cancelBtn.textContent = "キャンセル";
     cancelBtn.addEventListener("click", () => { editingSessionId = null; render(); });
@@ -720,7 +793,7 @@ function renderSessionRow(project, session) {
     actionsRow.appendChild(saveBtn);
 
     editWrap.appendChild(endLabel);
-    editWrap.appendChild(endInput);
+    editWrap.appendChild(endRow);
     editWrap.appendChild(noteLabel);
     editWrap.appendChild(noteInput);
     editWrap.appendChild(actionsRow);
@@ -850,7 +923,6 @@ document.getElementById("showArchivedToggle").addEventListener("change", (e) => 
   render();
 });
 document.getElementById("exportJsonBtn").addEventListener("click", exportJson);
-document.getElementById("exportCsvBtn").addEventListener("click", exportCsv);
 document.getElementById("prevMonthBtn").addEventListener("click", () => {
   viewedMonthKey = shiftMonthKey(viewedMonthKey, -1);
   render();
