@@ -417,6 +417,19 @@ function isValidTimeStr(v) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
 }
 
+// "1145" のようにコロン無しで打ち込んだ時刻も "11:45" として解釈する。
+// 3〜4桁の数字のみを対象とし、それ以外（コロン付きの正しい形式含む）はそのまま検証する
+function normalizeTimeStr(v) {
+  const trimmed = (v || "").trim();
+  if (isValidTimeStr(trimmed)) return trimmed;
+  if (/^\d{3,4}$/.test(trimmed)) {
+    const padded = trimmed.padStart(4, "0");
+    const candidate = `${padded.slice(0, 2)}:${padded.slice(2)}`;
+    if (isValidTimeStr(candidate)) return candidate;
+  }
+  return null;
+}
+
 function localDateKey(ts) {
   const d = new Date(ts);
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -769,6 +782,17 @@ function rejectSession(id) {
   render();
 }
 
+// Ctrl+Enter（Macでは Cmd+Enter）で対象ボタンをクリックする。フォーム系の
+// モーダル・インライン編集で、入力欄がどこにフォーカスしていてもキーボードだけで確定できるように
+function attachSubmitOnCtrlEnter(container, button) {
+  container.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      button.click();
+    }
+  });
+}
+
 function openManualRequestModal(projectId) {
   const project = getProject(projectId);
   if (!project) return;
@@ -802,19 +826,29 @@ function openManualRequestModal(projectId) {
     </div>
   `;
   document.body.appendChild(overlay);
+  overlay.querySelectorAll('input[id$="Time"]').forEach(attachTimeAutoFormat);
+  attachSubmitOnCtrlEnter(overlay, overlay.querySelector('[data-action="submit"]'));
   overlay.querySelector('[data-action="cancel"]').addEventListener("click", () => overlay.remove());
   overlay.querySelector('[data-action="submit"]').addEventListener("click", () => {
     const sd = document.getElementById("manualStartDate").value.trim();
-    const st = document.getElementById("manualStartTime").value.trim();
+    const st = normalizeTimeStr(document.getElementById("manualStartTime").value);
     const ed = document.getElementById("manualEndDate").value.trim();
-    const et = document.getElementById("manualEndTime").value.trim();
+    const et = normalizeTimeStr(document.getElementById("manualEndTime").value);
     const note = document.getElementById("manualNoteInput").value;
-    if (!isValidDateStr(sd) || !isValidTimeStr(st) || !isValidDateStr(ed) || !isValidTimeStr(et)) {
-      showToast("日付は YYYY-MM-DD、時刻は HH:MM の形式で入力してください", "warn");
+    if (!isValidDateStr(sd) || !st || !isValidDateStr(ed) || !et) {
+      showToast("日付は YYYY-MM-DD、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
       return;
     }
     const ok = requestManualSession(projectId, `${sd}T${st}`, `${ed}T${et}`, note);
     if (ok) overlay.remove();
+  });
+}
+
+// 時刻入力欄からフォーカスが外れたら "1145" → "11:45" のように整形して見せる
+function attachTimeAutoFormat(input) {
+  input.addEventListener("blur", () => {
+    const normalized = normalizeTimeStr(input.value);
+    if (normalized) input.value = normalized;
   });
 }
 
@@ -1096,6 +1130,7 @@ function renderSessionRow(project, session) {
     endTimeInput.placeholder = "HH:MM";
     endRow.appendChild(endDateInput);
     endRow.appendChild(endTimeInput);
+    attachTimeAutoFormat(endTimeInput);
 
     const noteLabel = document.createElement("label");
     noteLabel.textContent = "メモ";
@@ -1112,9 +1147,9 @@ function renderSessionRow(project, session) {
     saveBtn.textContent = "保存";
     saveBtn.addEventListener("click", () => {
       const ed = endDateInput.value.trim();
-      const et = endTimeInput.value.trim();
-      if (!isValidDateStr(ed) || !isValidTimeStr(et)) {
-        showToast("日付は YYYY-MM-DD、時刻は HH:MM の形式で入力してください", "warn");
+      const et = normalizeTimeStr(endTimeInput.value);
+      if (!isValidDateStr(ed) || !et) {
+        showToast("日付は YYYY-MM-DD、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
         return;
       }
       saveSessionEdit(session.id, `${ed}T${et}`, noteInput.value);
@@ -1130,6 +1165,7 @@ function renderSessionRow(project, session) {
     editWrap.appendChild(noteLabel);
     editWrap.appendChild(noteInput);
     editWrap.appendChild(actionsRow);
+    attachSubmitOnCtrlEnter(editWrap, saveBtn);
     return editWrap;
   }
 
