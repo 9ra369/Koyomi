@@ -171,10 +171,11 @@ header .subtitle { color: var(--muted); font-size: 13px; }
   flex-direction: column; gap: 6px; font-size: 12px;
 }
 .session-edit label { color: var(--muted); font-size: 11px; }
-.session-edit input[type="datetime-local"],
+.session-edit input[type="date"],
 .session-edit input[type="text"] {
   background: var(--panel); border: 1px solid var(--border); color: var(--text);
   padding: 5px 8px; border-radius: 6px; font-size: 12px; outline: none; width: 100%;
+  color-scheme: dark; /* ネイティブのカレンダーピッカーをダークテーマに合わせる */
 }
 .session-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .session-edit-actions button {
@@ -211,6 +212,7 @@ header .subtitle { color: var(--muted); font-size: 13px; }
 .modal-form input {
   background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
   padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none; width: 100%;
+  color-scheme: dark; /* ネイティブのカレンダーピッカーをダークテーマに合わせる */
 }
 .modal-form input:focus { border-color: var(--accent); }
 .datetime-row { display: flex; gap: 6px; }

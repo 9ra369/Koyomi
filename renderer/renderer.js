@@ -475,12 +475,12 @@ function openManualRequestModal(projectId) {
       <div class="modal-form">
         <label for="manualStartDate">開始</label>
         <div class="datetime-row">
-          <input type="text" id="manualStartDate" value="${localDateKey(defaultStart)}" placeholder="YYYY-MM-DD">
+          <input type="date" id="manualStartDate" value="${localDateKey(defaultStart)}">
           <input type="text" id="manualStartTime" value="${toTimeStr(defaultStart)}" placeholder="HH:MM">
         </div>
         <label for="manualEndDate">終了</label>
         <div class="datetime-row">
-          <input type="text" id="manualEndDate" value="${localDateKey(defaultEnd)}" placeholder="YYYY-MM-DD">
+          <input type="date" id="manualEndDate" value="${localDateKey(defaultEnd)}">
           <input type="text" id="manualEndTime" value="${toTimeStr(defaultEnd)}" placeholder="HH:MM">
         </div>
         <label for="manualNoteInput">メモ</label>
@@ -503,7 +503,7 @@ function openManualRequestModal(projectId) {
     const et = normalizeTimeStr(document.getElementById("manualEndTime").value);
     const note = document.getElementById("manualNoteInput").value;
     if (!isValidDateStr(sd) || !st || !isValidDateStr(ed) || !et) {
-      showToast("日付は YYYY-MM-DD、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
+      showToast("日付を選択し、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
       return;
     }
     const ok = requestManualSession(projectId, `${sd}T${st}`, `${ed}T${et}`, note);
@@ -788,9 +788,8 @@ function renderSessionRow(project, session) {
     const endRow = document.createElement("div");
     endRow.className = "datetime-row";
     const endDateInput = document.createElement("input");
-    endDateInput.type = "text";
+    endDateInput.type = "date";
     endDateInput.value = localDateKey(session.end);
-    endDateInput.placeholder = "YYYY-MM-DD";
     const endTimeInput = document.createElement("input");
     endTimeInput.type = "text";
     endTimeInput.value = toTimeStr(session.end);
@@ -816,7 +815,7 @@ function renderSessionRow(project, session) {
       const ed = endDateInput.value.trim();
       const et = normalizeTimeStr(endTimeInput.value);
       if (!isValidDateStr(ed) || !et) {
-        showToast("日付は YYYY-MM-DD、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
+        showToast("日付を選択し、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
         return;
       }
       saveSessionEdit(session.id, `${ed}T${et}`, noteInput.value);

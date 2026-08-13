@@ -178,10 +178,11 @@
     flex-direction: column; gap: 6px; font-size: 12px;
   }
   .session-edit label { color: var(--muted); font-size: 11px; }
-  .session-edit input[type="datetime-local"],
+  .session-edit input[type="date"],
   .session-edit input[type="text"] {
     background: var(--panel); border: 1px solid var(--border); color: var(--text);
     padding: 5px 8px; border-radius: 6px; font-size: 12px; outline: none; width: 100%;
+    color-scheme: dark; /* ネイティブのカレンダーピッカーをダークテーマに合わせる */
   }
   .session-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
   .session-edit-actions button {
@@ -218,6 +219,7 @@
   .modal-form input {
     background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
     padding: 8px 10px; border-radius: 8px; font-size: 13px; outline: none; width: 100%;
+    color-scheme: dark; /* ネイティブのカレンダーピッカーをダークテーマに合わせる */
   }
   .modal-form input:focus { border-color: var(--accent); }
   .datetime-row { display: flex; gap: 6px; }
@@ -808,12 +810,12 @@ function openManualRequestModal(projectId) {
       <div class="modal-form">
         <label for="manualStartDate">開始</label>
         <div class="datetime-row">
-          <input type="text" id="manualStartDate" value="${localDateKey(defaultStart)}" placeholder="YYYY-MM-DD">
+          <input type="date" id="manualStartDate" value="${localDateKey(defaultStart)}">
           <input type="text" id="manualStartTime" value="${toTimeStr(defaultStart)}" placeholder="HH:MM">
         </div>
         <label for="manualEndDate">終了</label>
         <div class="datetime-row">
-          <input type="text" id="manualEndDate" value="${localDateKey(defaultEnd)}" placeholder="YYYY-MM-DD">
+          <input type="date" id="manualEndDate" value="${localDateKey(defaultEnd)}">
           <input type="text" id="manualEndTime" value="${toTimeStr(defaultEnd)}" placeholder="HH:MM">
         </div>
         <label for="manualNoteInput">メモ</label>
@@ -836,7 +838,7 @@ function openManualRequestModal(projectId) {
     const et = normalizeTimeStr(document.getElementById("manualEndTime").value);
     const note = document.getElementById("manualNoteInput").value;
     if (!isValidDateStr(sd) || !st || !isValidDateStr(ed) || !et) {
-      showToast("日付は YYYY-MM-DD、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
+      showToast("日付を選択し、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
       return;
     }
     const ok = requestManualSession(projectId, `${sd}T${st}`, `${ed}T${et}`, note);
@@ -1121,9 +1123,8 @@ function renderSessionRow(project, session) {
     const endRow = document.createElement("div");
     endRow.className = "datetime-row";
     const endDateInput = document.createElement("input");
-    endDateInput.type = "text";
+    endDateInput.type = "date";
     endDateInput.value = localDateKey(session.end);
-    endDateInput.placeholder = "YYYY-MM-DD";
     const endTimeInput = document.createElement("input");
     endTimeInput.type = "text";
     endTimeInput.value = toTimeStr(session.end);
@@ -1149,7 +1150,7 @@ function renderSessionRow(project, session) {
       const ed = endDateInput.value.trim();
       const et = normalizeTimeStr(endTimeInput.value);
       if (!isValidDateStr(ed) || !et) {
-        showToast("日付は YYYY-MM-DD、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
+        showToast("日付を選択し、時刻は HH:MM（例: 1145）の形式で入力してください", "warn");
         return;
       }
       saveSessionEdit(session.id, `${ed}T${et}`, noteInput.value);
